@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using WarLight.Shared.AI.Wunderwaffe.Bot;
 using WarLight.Shared.AI.Wunderwaffe.Evaluation;
 
@@ -33,6 +34,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                 (possibleAttackTerritories);
             foreach (var territoryToAttack in sortedPossibleAttackTerritories)
             {
+                int minDefensePower = Math.Max(1, territoryToAttack.Armies.DefensePower);
                 var neededNewArmies = 0;
                 var ownedNeighbors = territoryToAttack.GetOwnedNeighbors();
                 var sortedOwnedNeighbors = state.TerritoryValueCalculator.SortDefenseValue(ownedNeighbors);
@@ -41,9 +43,9 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                 {
                     var smallAttackPresent = IsTerritoryAttackingOpponentTerritorySmall(ownedNeighbors[i], territoryToAttack);
                     if (smallAttackPresent)
-                        neededNewArmies = territoryToAttack.Armies.DefensePower;
+                        neededNewArmies = minDefensePower;
                     else
-                        neededNewArmies = territoryToAttack.Armies.DefensePower + 1;
+                        neededNewArmies = minDefensePower + 1;
 
                     if (ownedNeighbors[i].GetIdleArmies().NumArmies >= neededNewArmies)
                     {

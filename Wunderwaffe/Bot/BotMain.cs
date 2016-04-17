@@ -229,9 +229,10 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
             var sb = new StringBuilder();
 
             if (settings.LocalDeployments)
+            {
                 sb.AppendLine("This bot does not support Local Deployments");
-            if (settings.OneArmyStandsGuard == false)
-                sb.AppendLine("This bot does not support games without One Army Stands Guard");
+            }
+
 
             whyNot = sb.ToString();
             return whyNot.Length == 0;
@@ -241,8 +242,10 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         {
             var sb = new StringBuilder();
 
-            //if (settings.FogLevel != GameFogLevel.NoFog) //this is true of all bots, so it's not necessary to call out.
-            //    sb.AppendLine("Since bots have to be stateless it's not possible to use intel gathered in previous turns.");
+            if (settings.OneArmyStandsGuard == false)
+            {
+                sb.AppendLine("This bot will always keep one army as guard.");
+            }
             if (settings.Commanders)
                 sb.AppendLine("This bot does not understand Commanders and won't move or attack with them.");
             if (settings.MultiAttack)

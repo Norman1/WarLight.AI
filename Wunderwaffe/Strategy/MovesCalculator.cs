@@ -88,7 +88,6 @@ namespace WarLight.Shared.AI.Wunderwaffe.Strategy
             BotState.TerritoryValueCalculator.CalculateTerritoryValues(BotState.VisibleMap, BotState.VisibleMap);
             CalculateMoveIdleArmiesMoves(movesSoFar);
             BotState.DeleteBadMovesTask.CalculateDeleteBadMovesTask(movesSoFar);
-
             CalculateJoinInAttacksMoves(movesSoFar);
             BotState.DeleteBadMovesTask.CalculateDeleteBadMovesTask(movesSoFar);
 

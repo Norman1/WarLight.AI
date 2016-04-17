@@ -46,11 +46,15 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
 
         }
 
-        private void TryExpand(ref int armiesLeft, int maxDistance, float armyMult, Dictionary<BonusIDType, float> bonusWeights)
-        { 
+        private void TryExpand(ref int armiesLeft, int maxDistanceArg, float armyMult, Dictionary<BonusIDType, float> bonusWeights)
+        {
+            var maxDistance = maxDistanceArg;
 
             foreach (var borderTerritory in MultiAttackStanding.Territories.Values.Where(o => Bot.IsBorderTerritory(MultiAttackStanding, o.ID)).OrderByDescending(o => o.NumArmies.NumArmies).ToList())
             {
+                if (Bot.PastTime(10))
+                    return;
+
                 var stackSize = Math.Max(0, MultiAttackStanding.Territories[borderTerritory.ID].NumArmies.NumArmies - Bot.Settings.OneArmyMustStandGuardOneOrZero);
                 var canDeployOnBorderTerritory = Bot.Standing.Territories[borderTerritory.ID].OwnerPlayerID == Bot.PlayerID;
 
@@ -59,7 +63,18 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
 
                 var bonusPaths = Bot.Map.Bonuses.Keys
                     .Where(o => Bot.BonusValue(o) > 0)
-                    .Select(o => MultiAttackPathToBonus.TryCreate(Bot, borderTerritory.ID, o, MultiAttackStanding, maxDistance))
+                    .Select(o =>
+                    {
+                        if (maxDistance > 1 && Bot.PastTime(7))
+                        {
+                            AILog.Log("MultiAttackExpand", "Due to slow speed, reducing bonus search distance from " + maxDistance + " to 1");
+                            maxDistance = 1; //if we're taking too long, give up on far away bonuses.  Otherwise this algorithm can take forever on large maps
+                        }
+                        if (Bot.PastTime(10))
+                            return null;
+
+                        return MultiAttackPathToBonus.TryCreate(Bot, borderTerritory.ID, o, MultiAttackStanding, maxDistance);
+                    })
                     .Where(o => o != null)
                     .ToDictionary(o => o.BonusID, o => o);
 

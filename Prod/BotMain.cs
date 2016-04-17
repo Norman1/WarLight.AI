@@ -21,7 +21,7 @@ namespace WarLight.Shared.AI.Prod
 
         public string Description()
         {
-            return "Version 2.0 of WarLight's production AI.  Currently in beta. " + (UseRandomness ? "This bot allows randomness to influence its actions to keep it from being predictable." : "");
+            return "Version 2.0 of WarLight's production AI." + (UseRandomness ? "This bot allows randomness to influence its actions to keep it from being predictable.  This is the same AI that powers AIs in multi-player games, as well as custom single-player levels." : "");
         }
 
         public bool SupportsSettings(GameSettings settings, out string whyNot)
@@ -73,13 +73,23 @@ namespace WarLight.Shared.AI.Prod
         public Dictionary<PlayerIDType, Neighbor> Neighbors;
         public Dictionary<PlayerIDType, int> WeightedNeighbors;
         public HashSet<TerritoryIDType> AvoidTerritories = new HashSet<TerritoryIDType>(); //we're conducting some sort of operation here, such as a a blockade, so avoid attacking or deploying more here.
+        private Stopwatch Timer;
 
+        public bool PastTime(double seconds)
+        {
+            var ret = Timer.Elapsed.TotalSeconds >= seconds;
+
+            if (ret)
+                AILog.Log("BotMain", "PastTime " + seconds + " seconds, at " + Timer.Elapsed.TotalSeconds + " seconds");
+
+            return ret;
+        }
 
         //not available during picking:
         public MakeOrders.MakeOrdersMain MakeOrders; 
         public MakeOrders.OrdersManager Orders { get { return MakeOrders.Orders; } }
 
-        public void Init(GameIDType gameID, PlayerIDType myPlayerID, Dictionary<PlayerIDType, GamePlayer> players, MapDetails map, GameStanding distributionStanding, GameSettings gameSettings, int numberOfTurns, Dictionary<PlayerIDType, PlayerIncome> incomes, GameOrder[] prevTurn, GameStanding latestTurnStanding, GameStanding previousTurnStanding, Dictionary<PlayerIDType, TeammateOrders> teammatesOrders, List<CardInstance> cards, int cardsMustPlay)
+        public void Init(GameIDType gameID, PlayerIDType myPlayerID, Dictionary<PlayerIDType, GamePlayer> players, MapDetails map, GameStanding distributionStanding, GameSettings gameSettings, int numberOfTurns, Dictionary<PlayerIDType, PlayerIncome> incomes, GameOrder[] prevTurn, GameStanding latestTurnStanding, GameStanding previousTurnStanding, Dictionary<PlayerIDType, TeammateOrders> teammatesOrders, List<CardInstance> cards, int cardsMustPlay, Stopwatch timer)
         {
             this.DistributionStandingOpt = distributionStanding;
             this.Standing = latestTurnStanding;
@@ -97,6 +107,8 @@ namespace WarLight.Shared.AI.Prod
             this.Opponents = players.Values.Where(o => o.State == GamePlayerState.Playing && !IsTeammateOrUs(o.ID)).ToList();
             this.IsFFA = Opponents.Count > 1 && (Opponents.Any(o => o.Team == PlayerInvite.NoTeam) || Opponents.GroupBy(o => o.Team).Count() > 1);
             this.WeightedNeighbors = WeightNeighbors();
+            this.Timer = timer;
+            AILog.Log("BotMain", "Prod initialized.  Starting at " + timer.Elapsed.TotalSeconds + " seconds");
         }
 
         public int ArmiesToTakeMultiAttack(IEnumerable<Armies> defenseArmiesOnManyTerritories)
@@ -121,6 +133,8 @@ namespace WarLight.Shared.AI.Prod
 
         public int ArmiesToTake(Armies defenseArmies)
         {
+            Assert.Fatal(!defenseArmies.Fogged, "ArmiesToTake called on fog");
+
             var ret = SharedUtility.Round((defenseArmies.DefensePower / Settings.OffenseKillRate) - 0.5);
 
             if (ret == SharedUtility.Round(defenseArmies.DefensePower * Settings.DefenseKillRate))

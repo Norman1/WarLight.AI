@@ -44,7 +44,7 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
                 if (Bot.Orders.Orders.OfType<GameOrderAttackTransfer>().Any(o => o.To == expandTo))
                     continue; //we've already attacked it
 
-                int attackWith = Bot.ArmiesToTake(Bot.Standing.Territories[expandTo].NumArmies);
+                int attackWith = Bot.ArmiesToTake(Bot.Standing.Territories[expandTo].NumArmies.Fogged ? ExpansionHelper.GuessNumberOfArmies(Bot, expandTo) : Bot.Standing.Territories[expandTo].NumArmies);
 
                 var attackFromList = Bot.Map.Territories[expandTo].ConnectedTo.Keys
                     .Select(o => Bot.Standing.Territories[o])
@@ -91,7 +91,14 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
                 .SelectMany(o => Bot.Map.Territories[o].PartOfBonuses)
                 .Where(o => Bot.BonusValue(o) > 0)
                 .Distinct()
-                .Select(o => BonusPath.TryCreate(Bot, o, ts => ts.OwnerPlayerID == Bot.PlayerID))
+                .Select(o =>
+                {
+                    if (Bot.PastTime(10))
+                        return null; //stop trying to expand if we're slow
+
+                    return BonusPath.TryCreate(Bot, o, ts => ts.OwnerPlayerID == Bot.PlayerID);
+                    
+                })
                 .Where(o => o != null)
                 .ToDictionary(o => o.BonusID, o => o);
 

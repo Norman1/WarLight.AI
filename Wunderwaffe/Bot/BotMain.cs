@@ -232,8 +232,6 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
                 sb.AppendLine("This bot does not support Local Deployments");
             if (settings.OneArmyStandsGuard == false)
                 sb.AppendLine("This bot does not support games without One Army Stands Guard");
-            if (settings.FogLevel != GameFogLevel.NoFog && settings.FogLevel != GameFogLevel.LightFog && settings.FogLevel != GameFogLevel.Foggy)
-                sb.AppendLine("This bot only works in no fog, normal fog, or light fog.");
 
             whyNot = sb.ToString();
             return whyNot.Length == 0;

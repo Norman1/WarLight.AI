@@ -18,14 +18,21 @@ namespace WarLight.Shared.AI.Wunderwaffe.Evaluation
             // Step 1: Assume for all fogged territories that they are neutral with the same armies as during the picking stage
             RemoveFogAccordingToPickingState();
 
+            //  Step 2: Take care of non standard fog settings
+            RemoveNonStandardFog();
+
             // And that's it for now
 
         }
 
+
         private void RemoveFogAccordingToPickingState()
         {
+            //auto-dist game
             if (BotState.DistributionStanding == null)
-                return; //auto-dist game, skip
+            {
+                return;
+            }
 
             BotMap pickingStageMap = BotMap.FromStanding(BotState, BotState.DistributionStanding);
             BotMap visibleMap = BotState.VisibleMap;
@@ -37,6 +44,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Evaluation
 
             foreach (BotTerritory vmTerritory in visibleMap.Territories.Values.Where(territory => territory.OwnerPlayerID == TerritoryStanding.FogPlayerID))
             {
+
                 BotTerritory lvmTerritory = pickingStageMap.Territories[vmTerritory.ID];
                 vmTerritory.OwnerPlayerID = TerritoryStanding.NeutralPlayerID;
                 if (pickableTerritories.Contains(vmTerritory.ID))
@@ -48,7 +56,24 @@ namespace WarLight.Shared.AI.Wunderwaffe.Evaluation
                     vmTerritory.Armies = new Armies(lvmTerritory.Armies.NumArmies);
                 }
             }
+        }
 
+        private void RemoveNonStandardFog()
+        {
+            BotMap visibleMap = BotState.VisibleMap;
+            // Take care about territories where the armies are still fogged due to settings like dense fog
+            foreach (BotTerritory vmTerritory in visibleMap.Territories.Values.Where(territory => territory.Armies.Fogged))
+            {
+                // just assume some armies, whatever
+                if (vmTerritory.OwnerPlayerID == TerritoryStanding.NeutralPlayerID)
+                {
+                    vmTerritory.Armies = new Armies(2);
+                }
+                else
+                {
+                    vmTerritory.Armies = new Armies(5);
+                }
+            }
         }
 
 

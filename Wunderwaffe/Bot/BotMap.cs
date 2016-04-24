@@ -17,7 +17,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
             this.Bonuses = new Dictionary<BonusIDType, BotBonus>();
             this.BotState = state;
         }
-        
+
         /// <returns>: a new Map object exactly the same as this one</returns>
         public BotMap GetMapCopy()
         {
@@ -120,6 +120,19 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
                 }
             }
             return outvar;
+        }
+
+        public List<BotTerritory> GetVisibleOpponentTerritories()
+        {
+            List<BotTerritory> opponentTerritories = new List<BotTerritory>();
+            foreach (BotTerritory territory in Territories.Values)
+            {
+                if (territory.IsVisible && BotState.IsOpponent(territory.OwnerPlayerID))
+                {
+                    opponentTerritories.Add(territory);
+                }
+            }
+            return opponentTerritories;
         }
 
         public virtual List<BotTerritory> GetOpponentBorderingTerritories()

@@ -33,6 +33,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         public int DistanceToImportantSpot;
         public int DistanceToHighlyImportantSpot;
         public int DirectDistanceToOpponentBorder;
+        public int DirectDistanceToOwnBorder = -1;
         public int DistanceToOpponentBorder;
         public int DistanceToImportantOpponentBorder;
         public int DistanceToOpponentBonus = -1;
@@ -43,6 +44,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         public int FlankingTerritoryValue;
         public bool IsTerritoryBlocked = false;
         public bool IsOwnershipHeuristic = false;
+        public int amountBombed = 0;
 
         public BotTerritory(BotMap parent, TerritoryIDType id, PlayerIDType playerID, Armies armies)
         {
@@ -77,7 +79,6 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         {
             var remainingArmies = this.GetArmiesAfterDeployment(type);
             foreach (var atm in IncomingMoves)
-                //remainingArmies = remainingArmies.Subtract(new Armies(SharedUtility.Round(atm.Armies.NumArmies * BotState.Settings.OffensiveKillRate)));
                 remainingArmies = remainingArmies.Subtract(new Armies(getOwnKills(atm.Armies.NumArmies, remainingArmies.DefensePower)));
 
             if (!remainingArmies.Fogged && remainingArmies.NumArmies < 1)
@@ -106,9 +107,6 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
                 {
                     outvar.Add(neighbor);
                 }
-                // TODO gives wrong result
-                //if (Details.PartOfBonuses.Any(o => neighbor.Details.PartOfBonuses.Contains(o)))
-                //    outvar.Add(neighbor);
             }
             return outvar;
         }
@@ -171,19 +169,33 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
             {
                 armies = armies.Add(new Armies(pam.Armies));
             }
+
+            for (int i = 0; i < amountBombed; i++)
+            {
+                int halfArmies = (int)Math.Floor((double)(armies.DefensePower / 2));
+                armies = new Armies(halfArmies);
+            }
             return armies;
         }
 
         public Armies GetIdleArmies()
         {
             if (IsTerritoryBlocked)
+            {
                 return new Armies(0);
+            }
 
             var outvar = GetArmiesAfterDeployment(DeploymentType.Normal);
             foreach (var atm in this.OutgoingMoves)
+            {
                 outvar = outvar.Subtract(atm.Armies);
+            }
+            if (BotState.Settings.OneArmyStandsGuard)
+            {
+                outvar = outvar.Subtract(new Armies(1));
+            }
 
-            return outvar.Subtract(new Armies(1));
+            return outvar;
         }
 
         /// <param name="territory">a Territory object</param>
@@ -224,7 +236,9 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         {
             var idleArmies = new Armies(0);
             foreach (var neighbor in this.GetOwnedNeighbors())
+            {
                 idleArmies = idleArmies.Add(neighbor.GetIdleArmies());
+            }
             return idleArmies;
         }
 

@@ -193,6 +193,18 @@ namespace WarLight.Shared.AI.Wunderwaffe.BasicAlgorithms
             }
         }
 
+        public static void CalculateDirectDistanceToOwnTerritories(BotMap mapToUse, BotMap mapToWriteIn)
+        {
+            var ownedTerritories = mapToUse.GetOwnedTerritories();
+            var annotadedTerritories = CalculateDistances(mapToUse, ownedTerritories, null);
+            foreach (var territory in annotadedTerritories.Keys)
+            {
+                var territoryDistance = annotadedTerritories[territory];
+                var territoryToWriteIn = mapToWriteIn.Territories[territory.ID];
+                territoryToWriteIn.DirectDistanceToOwnBorder = territoryDistance;
+            }
+        }
+
         public static void CalculateDistanceToBorder(BotMain state, BotMap mapToWriteIn, BotMap mapToUse)
         {
             var nonOwnedTerritories = new List<BotTerritory>();

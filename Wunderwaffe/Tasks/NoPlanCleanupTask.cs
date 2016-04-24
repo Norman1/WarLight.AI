@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using WarLight.Shared.AI.Wunderwaffe.Bot;
 using WarLight.Shared.AI.Wunderwaffe.Move;
@@ -38,8 +39,9 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                 if (possibleToTerritories.Count > 0)
                 {
                     var territoryToAttack = possibleToTerritories.OrderByDescending(t => t.Bonuses.Sum(b => b.GetExpansionValue()) * 100 + t.ExpansionTerritoryValue).First();
-
-                    outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, fromTerritory, territoryToAttack, fromTerritory.GetIdleArmies(), "NoPlanCleanupTask"));
+                    Armies attackArmies = new Armies(Math.Min(fromTerritory.GetIdleArmies().DefensePower, territoryToAttack.getNeededBreakArmies(territoryToAttack.Armies.DefensePower)));
+                    outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, fromTerritory, territoryToAttack, attackArmies, "NoPlanCleanupTask"));
+                    //outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, fromTerritory, territoryToAttack, fromTerritory.GetIdleArmies(), "NoPlanCleanupTask"));
                 }
             }
             return outvar;
@@ -61,7 +63,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
             if (fromTerritory.GetIdleArmies().AttackPower <= 1)
                 isSmart = false;
 
-            if (toTerritory.Armies.DefensePower > toTerritory.getOwnKills(fromTerritory.GetIdleArmies().AttackPower,toTerritory.Armies.DefensePower))
+            if (toTerritory.Armies.DefensePower > toTerritory.getOwnKills(fromTerritory.GetIdleArmies().AttackPower, toTerritory.Armies.DefensePower))
                 isSmart = false;
             var distanceCondition1 = fromTerritory.DistanceToOpponentBorder <= 4;
             var distanceCondition2 = toTerritory.GetOpponentNeighbors().Count == 0;

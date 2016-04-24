@@ -25,7 +25,7 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
                 AILog.Log("PlayCards", "Must play " + numMustPlay + " cards, have " + bot.Cards.Count + ", teammate played " + cardsPlayedByTeammate.Count);
 
             var availableCards = bot.Cards.ToDictionary(o => o.ID, o => o);
-            
+
 
             foreach (var card in bot.Cards)
             {
@@ -33,7 +33,7 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
                 {
                     //Teammate played it
                     availableCards.Remove(card.ID);
-                    continue; 
+                    continue;
                 }
 
                 Action<CardType, Func<BotMain, CardInstance, bool>> tryPlay = (cardType, playFn) =>
@@ -121,8 +121,7 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
                 .SelectMany(o => bot.Map.Territories[o.ID].ConnectedTo.Keys)
                 .Distinct()
                 .Select(o => bot.Standing.Territories[o])
-                .Where(o => bot.IsOpponent(o.OwnerPlayerID) && o.NumArmies.Fogged == false)
-                .ToList();
+                .Where(o => bot.IsOpponent(o.OwnerPlayerID) && o.NumArmies.Fogged == false).ToList();
 
             var minArmies = !bot.UseRandomness ? bot.BaseIncome.Total * 2 : SharedUtility.Round(bot.BaseIncome.Total * RandomUtility.BellRandom(1, 3));
 
@@ -150,7 +149,7 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
 
         private static bool PlayDiplomacyCard(BotMain bot, CardInstance card)
         {
-            var canDip = bot.Players.Values.Where(o => 
+            var canDip = bot.Players.Values.Where(o =>
                 o.State == GamePlayerState.Playing  //only diplomacy people in the game
                 && bot.IsOpponent(o.ID)  //only diplomacy opponents
                 && bot.Orders.Orders.Concat(bot.Standing.ActiveCards.Select(z => (GameOrder)z.Card)).OfType<GameOrderPlayCardDiplomacy>().None(z => z.AffectsPlayer(o.ID) && z.AffectsPlayer(bot.PlayerID)) //don't diplomacy someone we're already in diplomacy with, or that we already played a diplomacy card on this turn
@@ -172,6 +171,6 @@ namespace WarLight.Shared.AI.Prod.MakeOrders
             bot.EffectiveIncome.FreeArmies += numArmies;
             return true;
         }
-        
+
     }
 }

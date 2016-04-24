@@ -85,7 +85,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
             this.TakeTerritoriesTaskCalculator = new TakeTerritoriesTaskCalculator(this);
             this.OpponentDeploymentGuesser = new OpponentDeploymentGuesser(this);
             this.PicksEvaluator = new PicksEvaluator(this);
-
+            
         }
 
         public void Init(GameIDType gameID, PlayerIDType myPlayerID, Dictionary<PlayerIDType, GamePlayer> players, MapDetails map, GameStanding distributionStanding, GameSettings settings, int numTurns, Dictionary<PlayerIDType, PlayerIncome> playerIncomes, GameOrder[] prevTurn, GameStanding latestTurnStanding, GameStanding previousTurnStanding, Dictionary<PlayerIDType, TeammateOrders> teammatesOrders, List<CardInstance> cards, int cardsMustPlay, Stopwatch timer)
@@ -194,6 +194,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
             this.WorkingMap = this.VisibleMap.GetMapCopy();
             DistanceCalculator.CalculateDistanceToBorder(this, this.VisibleMap, this.WorkingMap);
             DistanceCalculator.CalculateDirectDistanceToOpponentTerritories(this.VisibleMap, this.VisibleMap);
+            DistanceCalculator.CalculateDirectDistanceToOwnTerritories(VisibleMap, VisibleMap);
             DistanceCalculator.CalculateDistanceToOpponentBonuses(this.VisibleMap);
             DistanceCalculator.CalculateDistanceToOwnBonuses(this.VisibleMap);
             this.BonusExpansionValueCalculator.ClassifyBonuses(this.VisibleMap, this.VisibleMap);
@@ -241,25 +242,18 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot
         public bool RecommendsSettings(GameSettings settings, out string whyNot)
         {
             var sb = new StringBuilder();
-
-            if (settings.OneArmyStandsGuard == false)
-            {
-                sb.AppendLine("This bot will always keep one army as guard.");
-            }
             if (settings.Commanders)
                 sb.AppendLine("This bot does not understand Commanders and won't move or attack with them.");
             if (settings.MultiAttack)
                 sb.AppendLine("This bot does not understand Multi-Attack and will only attack one territory at a time.");
             if (settings.Cards.ContainsKey(CardType.Blockade.CardID))
                 sb.AppendLine("This bot does not understand how to play Blockade cards.");
-            if (settings.Cards.ContainsKey(CardType.Bomb.CardID))
-                sb.AppendLine("This bot does not understand how to play Bomb cards.");
             if (settings.Cards.ContainsKey(CardType.Diplomacy.CardID))
                 sb.AppendLine("This bot does not understand how to play Diplomacy cards.");
             if (settings.Cards.ContainsKey(CardType.EmergencyBlockade.CardID))
                 sb.AppendLine("This bot does not understand how to play Emergency Blockade cards.");
             if (settings.Cards.ContainsKey(CardType.Sanctions.CardID))
-                sb.AppendLine("This bot does not understand how to play Sanctions cards.");
+                sb.AppendLine("This bot does not understand the concept of negative sanction cards.");
             if (settings.Cards.ContainsKey(CardType.Airlift.CardID))
                 sb.AppendLine("This bot does not understand how to play Airlift cards.");
             if (settings.Cards.ContainsKey(CardType.Gift.CardID))

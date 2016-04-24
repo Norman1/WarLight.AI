@@ -87,10 +87,26 @@ namespace WarLight.Shared.AI.Wunderwaffe.Evaluation
             return outvar;
         }
 
-        public void AddExtraValueForFirstTurnBonus(BotBonus bonus)
+        public void AddExtraValueForSpeed(BotBonus bonus, int turns)
         {
-            bonus.ExpansionValue += bonus.ExpansionValue * 0.5;
+            if (turns == 1)
+            {
+                bonus.ExpansionValue += bonus.ExpansionValue * 0.5;
+            }
+            else if (turns == 2)
+            {
+                bonus.ExpansionValue += bonus.ExpansionValue * 0.2;
+            }
+            else if (turns == 3)
+            {
+                bonus.ExpansionValue += bonus.ExpansionValue * 0.1;
+            }
         }
+
+        //public void AddExtraValueForFirstTurnBonus(BotBonus bonus)
+        //{
+        //    bonus.ExpansionValue += bonus.ExpansionValue * 0.5;
+        //}
 
         /// <summary>Classifies the Bonus according to the intel from the temporaryMap.
         /// </summary>

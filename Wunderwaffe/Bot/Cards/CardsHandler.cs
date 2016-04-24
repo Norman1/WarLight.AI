@@ -8,11 +8,17 @@ namespace WarLight.Shared.AI.Wunderwaffe.Bot.Cards
     {
         public List<Card> cards = new List<Card>();
         private BotMain BotState;
-
+        // currently not always up to date and only used for airlifts
+        public List<Card> playedCards = new List<Card>();
 
         public CardsHandler(BotMain botState)
         {
             this.BotState = botState;
+        }
+
+        public List<Card> GetAvailableCards(CardTypes cardType)
+        {
+            return cards.Where(o => o.CardType == cardType && !o.PlayedByTeammate && !playedCards.Contains(o)).ToList();
         }
 
         public List<Card> GetCards(CardTypes cardType)

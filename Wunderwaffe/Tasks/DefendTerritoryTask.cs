@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using WarLight.Shared.AI.Wunderwaffe.Bot;
+using WarLight.Shared.AI.Wunderwaffe.Bot.Cards;
 using WarLight.Shared.AI.Wunderwaffe.Move;
 
 namespace WarLight.Shared.AI.Wunderwaffe.Tasks
@@ -86,6 +87,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                     }
                 }
             }
+
             // Then try to deploy
             if (missingArmies <= maxDeployment && missingArmies > 0)
                 outvar.AddOrder(new BotOrderDeploy(BotState.Me.ID, territoryToDefend, missingArmies));

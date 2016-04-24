@@ -23,6 +23,36 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                 moves.AddOrder(new BotOrderGeneric(GameOrderPlayCardReinforcement.Create(reinforcementCard.CardInstanceId, state.Me.ID)));
                 state.MyIncome.FreeArmies += numArmies;
             }
+
+
+            foreach (Card sanctionsCard in state.CardsHandler.GetCards(CardTypes.Sanctions))
+            {
+                List<GamePlayer> opponents = state.Opponents.ToList();
+                opponents.OrderByDescending(o => state.GetGuessedOpponentIncome(o.ID, state.VisibleMap));
+                AILog.Log("PlayCardsTask", "Playing sanctions card");
+                // TODO sanctions card can have negative percentages in which case we don't want to sanction our opponent
+                moves.AddOrder(new BotOrderGeneric(GameOrderPlayCardSanctions.Create(sanctionsCard.CardInstanceId, state.Me.ID, opponents[0].ID)));
+            }
+
+            foreach (Card bombCard in state.CardsHandler.GetCards(CardTypes.Bomb))
+            {
+                List<BotTerritory> opponentTerritories = state.VisibleMap.GetVisibleOpponentTerritories().Where(t => t.GetOwnedNeighbors().Count > 0).ToList();
+                opponentTerritories.OrderByDescending(t => t.Armies.DefensePower);
+                opponentTerritories.OrderByDescending(t => t.GetArmiesAfterDeployment(BotTerritory.DeploymentType.Normal));
+                if (opponentTerritories.Count > 0)
+                {
+                    int armies = opponentTerritories[0].GetArmiesAfterDeployment(BotTerritory.DeploymentType.Normal).DefensePower;
+                    // kinda random heuristic
+                    if (armies >= 3)
+                    {
+                        AILog.Log("PlayCardsTask", "Playing bomb card");
+                        moves.AddOrder(new BotOrderGeneric(GameOrderPlayCardBomb.Create(bombCard.CardInstanceId, state.Me.ID, opponentTerritories[0].ID)));
+                        opponentTerritories[0].amountBombed++;
+                    }
+                }
+            }
+
+
         }
 
         public static void DiscardCardsEndTurn(BotMain state, Moves moves)

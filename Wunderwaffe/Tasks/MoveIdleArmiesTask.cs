@@ -3,7 +3,7 @@ using WarLight.Shared.AI.Wunderwaffe.Bot;
 
 using WarLight.Shared.AI.Wunderwaffe.Move;
 using System.Linq;
-
+using System;
 
 namespace WarLight.Shared.AI.Wunderwaffe.Tasks
 {
@@ -59,8 +59,36 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
                 if (ourTerritory.GetIdleArmies().IsEmpty == false && ourTerritory.GetExpansionMoves().Count > 0)
                 {
                     var bestMove = GetBestExpansionMoveToAddArmies(ourTerritory.GetExpansionMoves());
-                    if (IsAddingArmiesBeneficial(bestMove, state))
-                        outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, ourTerritory, bestMove.To, ourTerritory.GetIdleArmies(), "MoveIdleArmiesTask2"));
+                    if (bestMove.To.GetOpponentNeighbors().Count != 0)
+                    {
+                        if (IsAddingArmiesBeneficial(bestMove, state))
+                        {
+                            outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, ourTerritory, bestMove.To, ourTerritory.GetIdleArmies(), "MoveIdleArmiesTask1"));
+                        }
+                    }
+                    // no opponent neighbors, try to split a bit more
+                    else
+                    {
+                        int idleArmies = ourTerritory.GetIdleArmies().DefensePower;
+                        List<BotBonus> expandBonuses = state.ExpansionTask.expandBonuses;
+                        List<BotTerritory> expandBonusTerritories = state.VisibleMap.Territories.Values.Where(territory => expandBonuses.Any(bonus => bonus.Territories.Contains(territory))).ToList();
+                        List<BotOrderAttackTransfer> expansionMoves = ourTerritory.GetExpansionMoves().OrderByDescending(move => move.To.ExpansionTerritoryValue).ToList();
+                        foreach (BotOrderAttackTransfer expansionMove in expansionMoves)
+                        {
+                            int missingArmies = state.ExpansionTask.getTerritoryAnnotationArmies(expansionMove.To);
+                            if (missingArmies != -1 && idleArmies > 0 && IsAddingArmiesBeneficial(expansionMove, state))
+                            {
+                                int armiesToAdd = Math.Min(missingArmies, idleArmies);
+                                outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, ourTerritory, expansionMove.To, new Armies(armiesToAdd), "MoveIdleArmiesTask2"));
+                                idleArmies -= armiesToAdd;
+                            }
+                        }
+                        if (idleArmies > 0 && IsAddingArmiesBeneficial(bestMove, state))
+                        {
+                            outvar.AddOrder(new BotOrderAttackTransfer(state.Me.ID, ourTerritory, bestMove.To, new Armies(idleArmies), "MoveIdleArmiesTask3"));
+                        }
+                    }
+
                 }
             }
             return outvar;
@@ -139,8 +167,7 @@ namespace WarLight.Shared.AI.Wunderwaffe.Tasks
         private static BotOrderAttackTransfer GetBestExpansionMoveToAddArmies(List<BotOrderAttackTransfer> expansionMoves)
         {
             BotOrderAttackTransfer bestExpansionMove = null;
-            List<BotOrderAttackTransfer> expansionMovesToOpponent = new List<BotOrderAttackTransfer
-                >();
+            List<BotOrderAttackTransfer> expansionMovesToOpponent = new List<BotOrderAttackTransfer>();
             foreach (BotOrderAttackTransfer atm in expansionMoves)
             {
                 if (atm.To.GetOpponentNeighbors().Count > 0)
